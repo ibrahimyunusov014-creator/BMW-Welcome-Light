@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome Light Visualizer v0.1</title>
+  
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      background-color: #e0e0e0;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .main-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .group-container {
+      background-color: #fff;
+      border-radius: 4px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      width: min(500px, 90vw);
+    }
+    .group-container h3 {
+      margin-top: 0;
+    }
+    label {
+      margin-bottom: 8px;
+      font-size: 14px;
+      display: block;
+    }
+    .input-row {
+    position: relative;
+    margin-bottom: 15px;
+    }
+
+    .input-row input {
+    width: calc(100% - 100px);
+    padding: 6px;
+    font-family: monospace;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+    }
+
+    .copy-btn {
+    position: absolute;
+    right: 48px;
+    background-color: #007bff;
+    border: none;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 1;
+    }
+
+    .copy-btn:focus {
+    outline: none;
+    }
+    .paste-btn {
+    position: absolute;
+    right: 2px;
+    background-color: #007bff;
+    border: none;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 1;
+    }
+
+    .paste-btn:focus {
+    outline: none;
+    }
+
+    button {
+      padding: 8px 16px;
+      cursor: pointer;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .dynamic-container {
+      width: 100%;
+      margin-top: 30px;
+    }
+    .seq-block {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .seq-subblock {
+      flex: 1 1 400px;
+      background-color: #fff;
+      padding: 10px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .seq-subblock h4 {
+      margin-top: 0;
+    }
+    .seq-subblock textarea {
+      width: 100%;
+      height: 80px;
+      font-family: monospace;
+      font-size: 12px;
+      box-sizing: border-box;
+      margin-bottom: 0;
+    }
+    .chartCanvas {
+      margin: 10px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+<h2>BMW Welcome Light Visualizer — Offline</h2><p style="text-align:center">İnternetsiz işləyir. Dəyərləri yoxla, sonra mavi düyməyə bas.</p>
+
+<div class="main-section">
+  <!-- Group 1: FLM2 left [0x43] -->
+  <div class="group-container">
+    <h3>FLM2 Left [0x43]</h3>
+    <label for="leftStaging1">Staging1_Data (max 252 Byte):</label>
+    <div class="input-row">
+        <input type="text" id="leftStaging1" placeholder="252 Byte, z.B. 00, 01, ..." />
+        <button class="copy-btn" title="Copy to Clipboard" 
+            onclick="copyToClipboard('leftStaging1')">⧉</button>
+        <button class="paste-btn" title="Paste from Clipboard"
+            onclick="pasteFromClipboard('leftStaging1')">⤶</button>
+    </div>
+    <label for="leftStaging2">Staging2_Data (max 252 Byte):</label>
+    <div class="input-row">
+        <input type="text" id="leftStaging2" placeholder="252 Byte, z.B. 00, 01, ..." />
+        <button class="copy-btn" title="Copy to Clipboard" 
+            onclick="copyToClipboard('leftStaging2')">⧉</button>
+        <button class="paste-btn" title="Paste from Clipboard"
+            onclick="pasteFromClipboard('leftStaging2')">⤶</button>
+    </div>
+  </div>
+
+  <!-- Group 2: FLM2 right [0x44] -->
+  <div class="group-container">
+    <h3>FLM2 Right [0x44]</h3>
+    <label for="rightStaging1">Staging1_Data (max 252 Byte):</label>
+    <div class="input-row">
+        <input type="text" id="rightStaging1" placeholder="252 Byte, z.B. 00, 01, ..." />
+        <button class="copy-btn" title="Copy to Clipboard" 
+            onclick="copyToClipboard('rightStaging1')">⧉</button>
+        <button class="paste-btn" title="Paste from Clipboard"
+            onclick="pasteFromClipboard('rightStaging1')">⤶</button>
+    </div>
+    <label for="rightStaging2">Staging2_Data (max 252 Byte):</label>
+    <div class="input-row">
+        <input type="text" id="rightStaging2" placeholder="252 Byte, z.B. 00, 01, ..." />
+        <button class="copy-btn" title="Copy to Clipboard" 
+            onclick="copyToClipboard('rightStaging2')">⧉</button>
+        <button class="paste-btn" title="Paste from Clipboard"
+            onclick="pasteFromClipboard('rightStaging2')">⤶</button>
+    </div>
+  </div>
+</div>
+
+<button onclick="buildDynamicFields()">Parse & Build Dynamic Fields</button>
+<button onclick="clearAllFields()">Clear All</button>
+
+<div class="dynamic-container" id="dynamicContainer">
+  <!-- Dynamic Sequences + Diagrams -->
+</div>
+
+<script>
+// ============================================================================
+// Global const and helper functions
+// ============================================================================
+const MAX_LEFT1 = 252;
+const MAX_LEFT2 = 168;
+const MAX_RIGHT1 = 252;
+const MAX_RIGHT2 = 168;
+
+function parseByteString(str) {
+  if (!str) return [];
+  let arr = str.replace(/\s/g, "").split(",");
+  return arr.map(x => x.trim()).filter(x => x !== "");
+}
+function buildByteString(arr) {
+    return arr.map(x => x.trim()).join(", ");
+}
+function ensureMaxSize(arr, maxSize) {
+  if (arr.length > maxSize) {
+    console.warn(`Exceeded Byte-limit: wanted ${maxSize}, have ${arr.length}. Trimming...`);
+    arr.length = maxSize;
+  }
+}
+
+// ============================================================================
+// Copy to Clipboard function
+// ============================================================================
+function copyToClipboard(fieldId) {
+  const text = document.getElementById(fieldId).value;
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      console.log("Copied to clipboard:", text);
+    })
+    .catch(err => {
+      console.error("Failed to copy!", err);
+    });
+}
+
+// ============================================================================
+// Paste from Clipboard function
+// ============================================================================
+function pasteFromClipboard(fieldId) {
+  navigator.clipboard.readText()
+    .then(text => {
+      document.getElementById(fieldId).value = text;
+      console.log("Pasted from clipboard into", fieldId, ":", text);
+    })
+    .catch(err => {
+      console.error("Failed to paste!", err);
+    });
+}
+
+// ============================================================================
+// Clear all Fields function
+// ============================================================================
+function clearAllFields() {
+  // Leert alle vier Hauptfelder
+  document.getElementById("leftStaging1").value = "";
+  document.getElementById("leftStaging2").value = "";
+  document.getElementById("rightStaging1").value = "";
+  document.getElementById("rightStaging2").value = "";
+}
+
+// ============================================================================
+// 1) Main storage of Bytes and sequences
+// ============================================================================
+let left1Bytes=[], left2Bytes=[], right1Bytes=[], right2Bytes=[];
+let sequencesLeft=[], sequencesRight=[];
+
+let chartSketchesLeft = [];
+let chartSketchesRight = [];
+
+// ============================================================================
+// 2) Main work
+// ============================================================================
+function buildDynamicFields() {
+  // 1) Read the main input fields
+  const leftStaging1 = document.getElementById("leftStaging1").value;
+  const leftStaging2 = document.getElementById("leftStaging2").value;
+  const rightStaging1 = document.getElementById("rightStaging1").value;
+  const rightStaging2 = document.getElementById("rightStaging2").value;
+
+  // Validate pasted HEX values before processing.
+  for(const value of [leftStaging1,leftStaging2,rightStaging1,rightStaging2]){
+    const items=value.split(',').map(x=>x.trim()).filter(Boolean);
+    if(items.some(x=>!/^[0-9a-fA-F]{2}$/.test(x))){
+      alert('HEX xətası: hər dəyər 00–FF arası iki simvol olmalıdır. Məsələn: 01, 0F, A4');
+      return;
+    }
+  }
+  // 2) Parse in Byte-Arrays
+  left1Bytes = parseByteString(leftStaging1);
+  left2Bytes = parseByteString(leftStaging2);
+  right1Bytes = parseByteString(rightStaging1);
+  right2Bytes = parseByteString(rightStaging2);
+
+  // 3) Check length
+  ensureMaxSize(left1Bytes,  MAX_LEFT1);
+  ensureMaxSize(left2Bytes, MAX_LEFT2);
+  ensureMaxSize(right1Bytes, MAX_RIGHT1);
+  ensureMaxSize(right2Bytes,MAX_RIGHT2);
+
+  // 4) Extract sequences
+  sequencesLeft = parseAllSequencesFromBytes(left1Bytes, left2Bytes);
+  sequencesRight= parseAllSequencesFromBytes(right1Bytes, right2Bytes);
+
+  // 5) Create dynamic fields
+  renderDynamicSequences();
+}
+
+function parseAllSequencesFromBytes(arr1, arr2) {
+  const combined = arr1.concat(arr2);
+  let idx = 0;
+  let seqs = [];
+
+  while (idx + 3 <= combined.length) {
+    // Break if "00,00,00"
+    if (combined[idx]   === "00" &&
+        combined[idx+1] === "00" &&
+        combined[idx+2] === "00") {
+      idx += 3;
+      break;
+    }
+    const identifier = combined[idx];
+    const lenHigh    = combined[idx+1];
+    const lenLow     = combined[idx+2];
+    idx += 3;
+
+    const lengthVal = parseInt(lenHigh+lenLow,16);
+    if (isNaN(lengthVal)) break;
+
+    const dataByteCount = lengthVal*2;
+    let endPos = idx + dataByteCount;
+    if (endPos>combined.length) {
+      console.warn("Sequence data incomplete, break.");
+      break;
+    }
+    const data = combined.slice(idx, endPos);
+    idx = endPos;
+
+    seqs.push({identifier, lengthVal, data});
+  }
+
+  // leftover => RAW
+  let leftover = combined.slice(idx);
+  if (leftover.length>0) {
+    seqs.push({identifier:"RAW", lengthVal:leftover.length, data: leftover});
+  }
+  return seqs;
+}
+
+/**
+ * Dynamic fields and diagrams
+ */
+function renderDynamicSequences() {
+  const container = document.getElementById("dynamicContainer");
+  container.innerHTML = "";
+
+  // Number of blocks
+  let maxSeq = Math.max(sequencesLeft.length, sequencesRight.length);
+
+  // Clear arrays of sketches
+  chartSketchesLeft = [];
+  chartSketchesRight= [];
+
+  for (let i=0; i<maxSeq; i++){
+    const leftSeq = sequencesLeft[i];
+    const rightSeq= sequencesRight[i];
+
+    const seqBlock = document.createElement("div");
+    seqBlock.className = "seq-block";
+
+    // left Subblock
+    const leftSub = document.createElement("div");
+    leftSub.className = "seq-subblock";
+    let leftH4 = document.createElement("h4");
+    leftH4.textContent = `Seq Left #${i+1}`;
+    leftSub.appendChild(leftH4);
+
+    // Textarea
+    let leftTA = document.createElement("textarea");
+    leftTA.value = leftSeq ? sequenceToString(leftSeq) : "";
+    leftTA.oninput = (e)=>{
+      sequencesLeft[i] = stringToSequence(e.target.value);
+      reAssembleLeftBytes();
+    };
+    leftSub.appendChild(leftTA);
+
+    seqBlock.appendChild(leftSub);
+
+    // right Subblock
+    const rightSub = document.createElement("div");
+    rightSub.className = "seq-subblock";
+    let rightH4 = document.createElement("h4");
+    rightH4.textContent = `Seq Right #${i+1}`;
+    rightSub.appendChild(rightH4);
+
+    // Textarea
+    let rightTA = document.createElement("textarea");
+    rightTA.value = rightSeq? sequenceToString(rightSeq) : "";
+    rightTA.oninput = (e)=>{
+      sequencesRight[i] = stringToSequence(e.target.value);
+      reAssembleRightBytes();
+    };
+    rightSub.appendChild(rightTA);
+
+    seqBlock.appendChild(rightSub);
+    
+    let chartDiv = document.createElement("div");
+    chartDiv.id = `chartCanvas_${i}`;
+    chartDiv.className = "chartCanvas";
+    chartDiv.style.width="min(500px, 90vw)";
+    chartDiv.style.height="220px";
+    chartDiv.textContent=`Diagram Sequence #${i+1}`;
+    seqBlock.appendChild(chartDiv);
+
+    container.appendChild(seqBlock);
+
+    // Initial p5 Sketch
+    let s = createSingleChart(i, chartDiv);
+    chartSketchesLeft[i] = s; 
+    chartSketchesRight[i]= s;
+  }
+}
+
+/**
+ * Sequence => Byte-String
+ */
+function sequenceToString(seq) {
+  if (!seq) return "";
+  if (seq.identifier==="RAW"){
+    return buildByteString(seq.data);
+  }
+  let hl = seq.lengthVal.toString(16).padStart(4,"0").toUpperCase();
+  let arr = [
+    seq.identifier,
+    hl.slice(0,2),
+    hl.slice(2,4),
+    ...seq.data
+  ];
+  return buildByteString(arr);
+}
+
+/**
+ * Text => Sequence { identifier, lengthVal, data } or {RAW}
+ */
+function stringToSequence(text) {
+  let arr = parseByteString(text);
+  if (arr.length<1) return null;
+  if (arr[0]==="RAW" || arr.length<3) {
+    return {identifier:"RAW", lengthVal:arr.length, data:arr};
+  }
+  let identifier = arr[0];
+  let lenHigh = arr[1];
+  let lenLow  = arr[2];
+  let lengthVal = parseInt(lenHigh+lenLow,16);
+  if (isNaN(lengthVal)) lengthVal=0;
+  let data = arr.slice(3);
+  return {identifier, lengthVal, data};
+}
+
+/**
+ * Re-assembling => left1Bytes + left2Bytes
+ */
+function reAssembleLeftBytes(){
+  let combined=[];
+  for (let seq of sequencesLeft){
+    if (!seq) continue;
+    if (seq.identifier==="RAW"){
+      combined.push(...seq.data);
+    } else {
+      let hl= seq.lengthVal.toString(16).padStart(4,"0").toUpperCase();
+      combined.push(seq.identifier, hl.slice(0,2), hl.slice(2,4), ...seq.data);
+    }
+  }
+  left1Bytes=combined.slice(0,MAX_LEFT1);
+  let leftover=combined.slice(MAX_LEFT1);
+  left2Bytes= leftover.slice(0,MAX_LEFT2);
+  let leftover2= leftover.slice(MAX_LEFT2);
+  if (leftover2.length>0){
+    console.warn("Left side data truncated!");
+  }
+  while(left1Bytes.length<MAX_LEFT1) left1Bytes.push("00");
+  while(left2Bytes.length<MAX_LEFT2) left2Bytes.push("00");
+  document.getElementById("leftStaging1").value= buildByteString(left1Bytes);
+  document.getElementById("leftStaging2").value= buildByteString(left2Bytes);
+}
+
+/**
+ * Re-assembling => right1Bytes + right2Bytes
+ */
+function reAssembleRightBytes(){
+  let combined=[];
+  for (let seq of sequencesRight){
+    if(!seq) continue;
+    if(seq.identifier==="RAW"){
+      combined.push(...seq.data);
+    } else {
+      let hl= seq.lengthVal.toString(16).padStart(4,"0").toUpperCase();
+      combined.push(seq.identifier, hl.slice(0,2), hl.slice(2,4), ...seq.data);
+    }
+  }
+  right1Bytes= combined.slice(0,MAX_RIGHT1);
+  let leftover= combined.slice(MAX_RIGHT1);
+  right2Bytes= leftover.slice(0,MAX_RIGHT2);
+  let leftover2= leftover.slice(MAX_RIGHT2);
+  if (leftover2.length>0){
+    console.warn("Right side data truncated!");
+  }
+  while(right1Bytes.length<MAX_RIGHT1) right1Bytes.push("00");
+  while(right2Bytes.length<MAX_RIGHT2) right2Bytes.push("00");
+  document.getElementById("rightStaging1").value=buildByteString(right1Bytes);
+  document.getElementById("rightStaging2").value=buildByteString(right2Bytes);
+}
+
+/**
+ * create ONE p5 instance for every Diagram #i 
+ */
+function createSingleChart(seqIndex, containerDiv) {
+  const left = parseForChart(sequencesLeft[seqIndex]);
+  const right = parseForChart(sequencesRight[seqIndex]);
+  const maxT = Math.max(left.maxT, right.maxT, 100);
+  const W=500,H=220,x0=48,y0=15,pw=430,ph=160;
+  const X=t=>x0+pw*t/maxT, Y=v=>y0+ph*(1-v/100);
+  let out=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:100%;background:white" xmlns="http://www.w3.org/2000/svg">`;
+  for(let b=0;b<=100;b+=25) out+=`<line x1="${x0}" y1="${Y(b)}" x2="${x0+pw}" y2="${Y(b)}" stroke="#ddd"/><text x="8" y="${Y(b)+4}" font-size="11">${b}%</text>`;
+  for(let i=0;i<=4;i++){let t=Math.round(maxT*i/4);out+=`<line x1="${X(t)}" y1="${y0}" x2="${X(t)}" y2="${y0+ph}" stroke="#eee"/><text x="${X(t)-12}" y="${y0+ph+17}" font-size="10">${t}</text>`;}
+  for(const [d,color] of [[left,'#1663df'],[right,'#df3131']]){
+    if(d.points.length) out+=`<polyline points="${d.points.map(p=>X(p.t)+','+Y(p.b)).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
+  }
+  out+=`<text x="190" y="215" font-size="11">Vaxt (ms)</text><text x="320" y="12" font-size="10" fill="#1663df">Sol</text><text x="365" y="12" font-size="10" fill="#df3131">Sağ</text></svg>`;
+  containerDiv.innerHTML=out;
+  return {remove(){containerDiv.innerHTML='';}};
+}
+
+/**
+ * parseForChart(seq): Sum up Duration => Time, Brightness => {maxT, points[]}
+ */
+ function parseForChart(seq){
+  if (!seq || seq.identifier === "RAW"){
+    return { maxT: 0, points: [] };
+  }
+  let sumT = 0;
+  let pts = [];
+  
+  // Start with 0ms and 0%
+  pts.push({ t: 0, b: 0 });
+  
+  // Process the data pairs: First Byte pair creates the first datapoint
+  for (let i = 0; i < seq.data.length; i += 2){
+    let durHex = parseInt(seq.data[i], 16) || 0;
+    let briHex = parseInt(seq.data[i+1], 16) || 0;
+    sumT += durHex * 10; // Duration in ms (Byte-Value * 10)
+    let bri = Math.min(briHex, 100); // Brigthness (0-100%)
+    pts.push({ t: sumT, b: bri });
+  }
+  
+  return { maxT: sumT, points: pts };
+}
+
+// ============================================================================
+// 3) Update-Button => updateSingleDiagram("left"/"right", i)
+// ============================================================================
+function updateSingleDiagram(side, seqIndex){
+
+  let s = (side==="left")? chartSketchesLeft[seqIndex] : chartSketchesRight[seqIndex];
+  if (s) s.remove();
+
+  // Create new
+  let chartDiv = document.getElementById(`chartCanvas_${seqIndex}`);
+  let newSketch = createSingleChart(seqIndex, chartDiv);
+
+  // Save
+  chartSketchesLeft[seqIndex] = newSketch;
+  chartSketchesRight[seqIndex]= newSketch;
+}
+
+window.ondevicemotion=null;
+window.ondeviceorientation=null;
+</script>
+</body>
+</html>
